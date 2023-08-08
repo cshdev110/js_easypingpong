@@ -15,7 +15,7 @@ const paddleBorder = 'black';
 const ballColor = 'white';
 const ballBoardColor = 'black';
 const ballRadius = 12.5;
-const paddleSpeed = 50;
+const paddleSpeed = 10;
 
 let intervalID;
 let ballSpeed = 1; // 1 = 1px per frame the lowest speed
@@ -24,6 +24,16 @@ let ballX = gameWidth / 2;
 let ballY = gameHeight / 2;
 let ballXDirection = 0;
 let ballYDirection = 0;
+
+// Key Map
+let keyMap = new Map([[
+    'w', false,
+    's', false,
+    'ArrowUp', false,
+    'ArrowDown', false
+]]);
+
+// Scores
 let player_1_score = 0;
 let player_2_score = 0;
 
@@ -41,11 +51,50 @@ let paddle_2 = {
     y: gameHeight - 100
 }
 
-window.addEventListener("keydown", changeDirection);
+// Event to listen for keypresses
+window.addEventListener("keydown", (evt) => {
+    switch (evt.key) {
+        case 'w':
+            keyMap.set('w', true);
+            console.log(evt.key);
+            break;
+        case 's':
+            keyMap.set('s', true);
+            console.log(evt.key);
+            break;
+        case 'ArrowUp':
+            keyMap.set('ArrowUp', true);
+            console.log(evt.key);
+            break;
+        case 'ArrowDown':
+            keyMap.set('ArrowDown', true);
+            break;
+    }
+});
+window.addEventListener("keyup", (evt) => {
+    switch (evt.key) {
+        case 'w':
+            keyMap.set('w', false);
+            console.log(evt.key);
+            break;
+        case 's':
+            keyMap.set('s', false);
+            console.log(evt.key);
+            break;
+        case 'ArrowUp':
+            keyMap.set('ArrowUp', false);
+            console.log(evt.key);
+            break;
+        case 'ArrowDown':
+            keyMap.set('ArrowDown', false);
+            break;
+    }
+});
+
 resetBtn.addEventListener("click", resetGame);
 
 gameStart();
-drawPaddles();
+drawPaddles(); //temporal
 
 function gameStart() {
     createBall();
@@ -54,6 +103,7 @@ function gameStart() {
 
 function nextTick() {
     intervalID = setTimeout(() => {
+        changeDirection();
         clearBoard();
         drawPaddles();
         moveBall();
@@ -84,15 +134,38 @@ function createBall() {}
 
 function moveBall() {}
 
-function drawBall(ballX, ballY) {}
+function drawBall(ballX, ballY) {
+
+}
 
 function checkCollision() {}
 
 function changeDirection() {
-    const keyPressed = event.keyCode;
-    console.log(keyPressed);
+    // const keyPressed = event.keyCode;
+    // console.log(keyPressed);
+    const paddle_1_up = 87;
+    const paddle_1_down = 83;
+    const paddle_2_up = 38;
+    const paddle_2_down = 40;
+
+    if(keyMap.get('w')) {
+        paddle_1.y -= (paddle_1.y >= paddleSpeed) ? paddleSpeed : 0;
+    }
+
+    if(keyMap.get('s')) {
+        paddle_1.y += (paddle_1.y <= gameBoard.height - paddle_1.height - paddleSpeed) ? paddleSpeed : 0;
+    }
+
+    if(keyMap.get('ArrowUp')) {
+        paddle_2.y -= (paddle_2.y >= paddleSpeed) ? paddleSpeed : 0;
+    }
+
+    if(keyMap.get('ArrowDown')) {
+        paddle_2.y += (paddle_2.y <= gameBoard.height - paddle_2.height - paddleSpeed) ? paddleSpeed : 0;
+    }
 }
 
 function updateScore() {}
 
 function resetGame() {}
+
