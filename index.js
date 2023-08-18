@@ -1,4 +1,4 @@
-// Variables
+// Variables -------------------------------------------------------------
 
 const gameBoard = document.querySelector('#gameBoard');
 // Context is where it is drawn
@@ -12,10 +12,10 @@ const boardBackground = 'forestgreen';
 const paddleColor_1 = 'lightblue';
 const paddleColor_2 = 'red';
 const paddleBorder = 'black';
-const ballColor = 'white';
-const ballBoardColor = 'black';
-const ballRadius = 12.5;
-const paddleSpeed = 10;
+let ballColor = 'white';
+const ballBorderColor = 'black';
+let ballRadius = 100.5;
+const paddleSpeed = 5;
 
 let intervalID;
 let ballSpeed = 1; // 1 = 1px per frame the lowest speed
@@ -50,21 +50,21 @@ let paddle_2 = {
     x: gameWidth - 25,
     y: gameHeight - 100
 }
+let betweenPaddles = false;
+
+// Event -------------------------------------------------------
 
 // Event to listen for keypresses
 window.addEventListener("keydown", (evt) => {
     switch (evt.key) {
         case 'w':
             keyMap.set('w', true);
-            console.log(evt.key);
             break;
         case 's':
             keyMap.set('s', true);
-            console.log(evt.key);
             break;
         case 'ArrowUp':
             keyMap.set('ArrowUp', true);
-            console.log(evt.key);
             break;
         case 'ArrowDown':
             keyMap.set('ArrowDown', true);
@@ -75,15 +75,12 @@ window.addEventListener("keyup", (evt) => {
     switch (evt.key) {
         case 'w':
             keyMap.set('w', false);
-            console.log(evt.key);
             break;
         case 's':
             keyMap.set('s', false);
-            console.log(evt.key);
             break;
         case 'ArrowUp':
             keyMap.set('ArrowUp', false);
-            console.log(evt.key);
             break;
         case 'ArrowDown':
             keyMap.set('ArrowDown', false);
@@ -93,8 +90,7 @@ window.addEventListener("keyup", (evt) => {
 
 resetBtn.addEventListener("click", resetGame);
 
-gameStart();
-drawPaddles(); //temporal
+// Functions ----------------------------------------------------
 
 function gameStart() {
     createBall();
@@ -130,15 +126,66 @@ function drawPaddles() {
     ctx.strokeRect(paddle_2.x, paddle_2.y, paddle_2.width, paddle_2.height);
 }
 
-function createBall() {}
-
-function moveBall() {}
-
-function drawBall(ballX, ballY) {
-
+function createBall() {
+    ballSpeed = 1;
+    ballXDirection = (Math.round(Math.random()) == 1) ? 1 : -1;
+    ballYDirection = (Math.round(Math.random()) == 1) ? 1 : -1;
+    ballX = gameWidth / 2;
+    ballY = gameHeight / 2;
+    drawBall(ballX, ballY);
 }
 
-function checkCollision() {}
+function moveBall() {
+    ballX += ballSpeed * ballXDirection;
+    ballY += ballSpeed * ballYDirection;
+}
+
+function drawBall(ballX, ballY) {
+    ctx.fillStyle = ballColor;
+    ctx.strokeStyle = ballBorderColor;
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.fill();
+}
+
+function checkCollision() {    
+    // Check if ball is out of bounds in the X axis
+    if (ballX + ballRadius >= gameWidth || ballX - ballRadius <= 0) {
+        player_1_score = (ballX + ballRadius >= gameWidth) ? player_1_score + 1 : player_1_score;
+        player_2_score = (ballX - ballRadius <= 0) ? player_2_score + 1 : player_2_score;
+        updateScore();
+        createBall();
+        ballXDirection *= -1;
+        return;
+    }
+
+    // Check if ball is out of bounds in the Y axis
+    if (ballY + ballRadius >= gameHeight || ballY - ballRadius <= 0) {
+        ballYDirection *= -1;
+    }
+
+    // Check if ball is colliding with paddles
+    // The betweenPaddles is for when the ball gets stuck between the width of any of paddles.
+    // Careful with parentheses. Here, the whole OR (||) needs to be separated with parentheses.
+    if (!betweenPaddles && 
+        ((ballX + ballRadius >= paddle_2.x && (ballY >= paddle_2.y && ballY <= (paddle_2.height + paddle_2.y))) ||
+        (ballX - ballRadius <= paddle_1.width && (ballY >= paddle_1.y && ballY <= (paddle_1.height + paddle_1.y))))) {
+        ballXDirection *= -1;
+        ballSpeed += 0.3;
+        betweenPaddles = true;
+        // Randomise ball color
+        ballColor = `rgb(${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)})`;
+        // Decreasing ball radius
+        ballRadius = (ballRadius > 5) ? ballRadius - 10 : ballRadius;
+
+    }
+    if (betweenPaddles && (ballX + ballRadius < paddle_2.x) && (ballX - ballRadius > paddle_1.width)) {
+        betweenPaddles = false;
+    }
+}
 
 function changeDirection() {
     // const keyPressed = event.keyCode;
@@ -165,7 +212,39 @@ function changeDirection() {
     }
 }
 
-function updateScore() {}
+function updateScore() {
+    scoreT.textContent = `${player_1_score} - ${player_2_score}`;
+}
 
-function resetGame() {}
+function resetGame() {
+    player_1_score = 0;
+    player_2_score = 0;
+    paddle_1 = {
+        width: 25,
+        height: 100,
+        x: 0,
+        y: 0
+    }
+    paddle_2 = {
+        width: 25,
+        height: 100,
+        x: gameWidth - 25,
+        y: gameHeight - 100
+    }
+    ballSpeed = 1;
+    ballX = 0; 
+    ballY = 0;
+    ballXDirection = 0;
+    ballYDirection = 0;
+    ballColor = 'white';
+    ballRadius = 100.5;
+    updateScore();
+    clearInterval(intervalID);
+    gameStart();
+}
 
+
+// Main ---------------------------------------------------------
+
+gameStart();
+drawPaddles(); //temporal
